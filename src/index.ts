@@ -1,9 +1,11 @@
-import semver from "semver";
 import path from "path";
 import fs from "fs";
 import util from "util";
+import semver from "semver";
+import yargs from "yargs";
 
-const folderPath = process.argv[2];
+const argv = yargs.argv;
+const folderPath = argv._[0];
 const yarnPath = path.resolve(folderPath, "yarn.lock");
 const packagePath = path.resolve(folderPath, "package.json");
 const readFileAsync = util.promisify(fs.readFile);
@@ -31,11 +33,17 @@ const devDependenciesString = "devDependencies";
     const regexString = `"?${searchString}"?[,:].*?version\\s"(.*?)"`;
     const regex = new RegExp(regexString, "gs");
     const searchPackage = regex.exec(yarnMetaData);
+    if (searchPackage === null) {
+      console.error(
+        "package.json and yarn.lock not in sync, please run yarn install again"
+      );
+      return;
+    }
     const useVersion = searchPackage[1];
     if (semver.minVersion(version).version !== useVersion) {
-      shouldFix = true;
-      console.log(
-        `the ${packageName} is ${useVersion} in yarn.lock, but is ${version} in package.json`
+      shouldFix = argv.fix || false;
+      console.warn(
+        `${packageName} is ${useVersion} in yarn.lock, but is ${version} in package.json`
       );
       const isInDependencies =
         packageMetaData[dependenciesString][packageName] !== null;
@@ -46,6 +54,7 @@ const devDependenciesString = "devDependencies";
     }
   }
   if (shouldFix) {
+    console.log("fixing package.json...");
     await writeFileAsync(packagePath, JSON.stringify(packageMetaData, null, 2));
   }
 })();
