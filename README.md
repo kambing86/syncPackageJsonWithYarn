@@ -1,3 +1,3 @@
 # How to use it
 
-- run `yarn ts-node ./src/index.ts <your project directory>`
+- run `yarn start <your project directory> --fix` or `npm start ../npm-explorer/ -- --fix`
