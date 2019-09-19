@@ -46,7 +46,7 @@ const devDependenciesString = "devDependencies";
         `${packageName} is ${useVersion} in yarn.lock, but is ${version} in package.json`
       );
       const isInDependencies =
-        packageMetaData[dependenciesString][packageName] !== null;
+        packageMetaData[dependenciesString][packageName] !== undefined;
       const setPath = isInDependencies
         ? dependenciesString
         : devDependenciesString;
