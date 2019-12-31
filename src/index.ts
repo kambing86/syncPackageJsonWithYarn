@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import util from "util";
-import semver from "semver";
+import minVersion from "semver/ranges/min-version";
 import yargs from "yargs";
 
 const argv = yargs.argv;
@@ -26,10 +26,7 @@ const devDependenciesString = "devDependencies";
   let shouldFix = false;
   for (const packageName in dependencies) {
     const version = dependencies[packageName];
-    const searchString = String(`${packageName}@${version}`).replace(
-      /(\W)/g,
-      "\\$1"
-    );
+    const searchString = `${packageName}@${version}`.replace(/(\W)/g, "\\$1");
     const regexString = `"?${searchString}"?[,:].*?version\\s"(.*?)"`;
     const regex = new RegExp(regexString, "gs");
     const searchPackage = regex.exec(yarnMetaData);
@@ -40,17 +37,21 @@ const devDependenciesString = "devDependencies";
       return;
     }
     const useVersion = searchPackage[1];
-    if (semver.minVersion(version).version !== useVersion) {
-      shouldFix = argv.fix || false;
-      console.warn(
-        `${packageName} is ${useVersion} in yarn.lock, but is ${version} in package.json`
-      );
-      const isInDependencies =
-        packageMetaData[dependenciesString][packageName] !== undefined;
-      const setPath = isInDependencies
-        ? dependenciesString
-        : devDependenciesString;
-      packageMetaData[setPath][packageName] = `^${useVersion}`;
+    try {
+      if (minVersion(version).version !== useVersion) {
+        shouldFix = argv.fix || false;
+        console.warn(
+          `${packageName} is ${useVersion} in yarn.lock, but is ${version} in package.json`
+        );
+        const isInDependencies =
+          packageMetaData[dependenciesString][packageName] !== undefined;
+        const setPath = isInDependencies
+          ? dependenciesString
+          : devDependenciesString;
+        packageMetaData[setPath][packageName] = `^${useVersion}`;
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
   if (shouldFix) {
