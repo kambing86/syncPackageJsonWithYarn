@@ -5,9 +5,10 @@ import minVersion from "semver/ranges/min-version";
 import yargs from "yargs";
 
 const argv = yargs.argv;
-const folderPath = argv._[0];
-const yarnPath = path.resolve(folderPath, "yarn.lock");
-const packagePath = path.resolve(folderPath, "package.json");
+const path1 = argv._[0];
+const path2 = argv._[1] || path1;
+const yarnPath = path.resolve(path1, "yarn.lock");
+const packagePath = path.resolve(path2, "package.json");
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 const dependenciesString = "dependencies";
@@ -19,7 +20,7 @@ const devDependenciesString = "devDependencies";
   );
   const dependencies = {
     ...(packageMetaData[dependenciesString] || {}),
-    ...(packageMetaData[devDependenciesString] || {})
+    ...(packageMetaData[devDependenciesString] || {}),
   };
 
   const yarnMetaData = await readFileAsync(yarnPath, { encoding: "utf8" });
