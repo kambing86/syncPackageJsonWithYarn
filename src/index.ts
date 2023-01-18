@@ -25,10 +25,11 @@ const devDependenciesString = "devDependencies";
 
   const yarnMetaData = await readFileAsync(yarnPath, { encoding: "utf8" });
   let shouldFix = false;
+  const useV2 = argv.v1 == null;
   for (const packageName in dependencies) {
     const version = dependencies[packageName];
-    const searchString = `${packageName}@${version}`.replace(/(\W)/g, "\\$1");
-    const regexString = `"?${searchString}"?[,:].*?version\\s"(.*?)"`;
+    const searchString = useV2 ? `${packageName}@npm:${version}`.replace(/(\W)/g, "\\$1") : `${packageName}@${version}`.replace(/(\W)/g, "\\$1");
+    const regexString = useV2 ? `"?${searchString}"?[,:].*?\\s*?version:\\s(.*?)\n` : `"?${searchString}"?[,:].*?version\\s"(.*?)"`;
     const regex = new RegExp(regexString, "gs");
     const searchPackage = regex.exec(yarnMetaData);
     if (searchPackage === null) {
